@@ -11,7 +11,8 @@
  *        (e.g. arming/recording toggles the GS drives at runtime).
  */
 enum class ControlFlag : uint8_t {
-    SdRecording = 0x00,  /**< Arm/disarm SD-card logging (the storage write-enable). */
+    PersistingData = 0x00,  /**< Persist telemetry records to the SD card. When off, records still
+                                 drain from the buffer but are discarded (keeps the card from filling). */
 };
 static_assert(sizeof(ControlFlag) == 1, "ControlFlag must be exactly 1 byte (on the wire)");
 
@@ -29,7 +30,7 @@ static_assert(sizeof(SetControlFlagFrame) == 2, "SetControlFlagFrame must be 2 p
 [[nodiscard]] constexpr std::optional<ControlFlag> toControlFlag(uint8_t id)
 {
     switch (static_cast<ControlFlag>(id)) {
-        case ControlFlag::SdRecording:
+        case ControlFlag::PersistingData:
             return static_cast<ControlFlag>(id);
     }
     return std::nullopt;
