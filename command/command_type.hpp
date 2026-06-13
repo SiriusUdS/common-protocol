@@ -6,6 +6,7 @@
 
 #include "command/set_state.hpp"          // SetStateFrame         — SetState payload
 #include "command/set_valve_position.hpp" // SetValvePositionFrame — SetValvePosition payload
+#include "command/set_control_flag.hpp"   // SetControlFlagFrame   — SetControlFlag payload
 
 /* ------------------------------------------------------------------------- *
  * Canonical command id (the on-wire SSOT) + per-command payload sizing.
@@ -31,6 +32,7 @@ enum class CommandType : uint8_t {
     SetState         = 0x02,  /**< Request a device state change. Payload: SetStateFrame (State TBD). */
     SetValvePosition = 0x03,  /**< Drive a valve to a position. Payload: SetValvePositionFrame. */
     Synchronise      = 0x04,  /**< Synchronise device state across the network (always includes time). No payload. */
+    SetControlFlag   = 0x05,  /**< Set a named runtime control flag. Payload: SetControlFlagFrame. */
 };
 // Replies to commands live in ResponseType (response_type.hpp), tagged
 // PayloadType::Response — e.g. Pong answering Ping. CommandType is requests only.
@@ -46,6 +48,7 @@ enum class CommandType : uint8_t {
         case CommandType::SetState:         return sizeof(SetStateFrame);
         case CommandType::SetValvePosition: return sizeof(SetValvePositionFrame);
         case CommandType::Synchronise:      return 0;
+        case CommandType::SetControlFlag:   return sizeof(SetControlFlagFrame);
     }
     return 0;
 }
@@ -61,6 +64,7 @@ enum class CommandType : uint8_t {
         case CommandType::SetState:
         case CommandType::SetValvePosition:
         case CommandType::Synchronise:
+        case CommandType::SetControlFlag:
             return static_cast<CommandType>(id);
     }
     return std::nullopt;

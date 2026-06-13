@@ -15,6 +15,7 @@
 
 enum class ResponseType : uint8_t {
     Pong = 0x01,  /**< Reply to CommandType::Ping. No payload. */
+    Ack  = 0x02,  /**< Generic acknowledgement that a command was received + applied (echoes its seq). No payload. */
 };
 static_assert(sizeof(ResponseType) == 1, "ResponseType must be exactly 1 byte (on the wire)");
 
@@ -26,6 +27,7 @@ static_assert(sizeof(ResponseType) == 1, "ResponseType must be exactly 1 byte (o
 {
     switch (static_cast<ResponseType>(id)) {
         case ResponseType::Pong:
+        case ResponseType::Ack:
             return static_cast<ResponseType>(id);
     }
     return std::nullopt;
