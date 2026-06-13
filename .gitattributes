@@ -1,0 +1,3 @@
+# Normalize line endings: store and check out source as LF on every platform, so
+# the firmware (Windows) and the ground station (Linux/Mac) never see line-ending churn.
+* text=auto eol=lf
