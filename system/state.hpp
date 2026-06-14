@@ -20,8 +20,10 @@ namespace logic::control {
  */
 enum class State : uint8_t {
     Init   = 0x00,  /**< Power-on / boot init. */
-    Safe   = 0x01,  /**< Safe, valves in known-safe positions. */
-    Unsafe = 0x02,  /**< Armed / propellant operations permitted. */
+    Safe   = 0x01,  /**< People are near the system: ANY action is hazardous, so none is
+                         permitted. The only exit is Unsafe (the area is declared clear). */
+    Unsafe = 0x02,  /**< No people are near the system: it may be armed and operated
+                         (propellant operations permitted). */
     Abort  = 0x03,  /**< Abort sequence engaged. */
     Error  = 0x04,  /**< Fault latched. */
     Ignite = 0x05,  /**< Ignition sequence. */

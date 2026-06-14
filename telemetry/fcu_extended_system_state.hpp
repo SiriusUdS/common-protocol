@@ -17,10 +17,13 @@
 struct FcuExtendedSystemState {
     uint32_t         creation_timestamp_ms;                  /**< Time this record was assembled. */
     uint32_t         control_flags;                          /**< Live control-flag bitmask (bit N = ControlFlag value N; see set_control_flag.hpp). Lets the GS read the recording config straight from telemetry. */
+    uint8_t          last_refused_state_from;                /**< State the board was in when a SetState transition was last refused (State value). */
+    uint8_t          last_refused_state_to;                  /**< Requested state that was refused. Both 0 (Init) = none refused since boot. */
+    uint8_t          reserved[2];                            /**< Pad to 4 bytes; keep the record packed. */
     ThermocoupleInfo thermocouple_info[THERMOCOUPLE_COUNT];  /**< 4 x MAX31856 (SPI6): per-channel temps + faults. */
 };
 
 // Wire layout guard: must be packed with no implicit padding.
-static_assert(sizeof(FcuExtendedSystemState) == 2 * sizeof(uint32_t)
+static_assert(sizeof(FcuExtendedSystemState) == 3 * sizeof(uint32_t)
                                               + THERMOCOUPLE_COUNT * sizeof(ThermocoupleInfo),
               "FcuExtendedSystemState has implicit padding — add explicit reserved bytes");
