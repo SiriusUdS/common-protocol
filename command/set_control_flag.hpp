@@ -13,6 +13,10 @@
 enum class ControlFlag : uint8_t {
     PersistingData = 0x00,  /**< Persist telemetry records to the SD card. When off, records still
                                  drain from the buffer but are discarded (keeps the card from filling). */
+    FastRecording  = 0x01,  /**< While persisting: log the high-rate SystemState at the fast rate
+                                 (2 kHz -> data_fast.bin) when set, or downsampled to the slow rate
+                                 (100 Hz -> data_slow.bin) when clear. ExtendedSystemState (data_ext.bin)
+                                 is logged regardless. No effect while PersistingData is off. */
 };
 static_assert(sizeof(ControlFlag) == 1, "ControlFlag must be exactly 1 byte (on the wire)");
 
@@ -31,6 +35,7 @@ static_assert(sizeof(SetControlFlagFrame) == 2, "SetControlFlagFrame must be 2 p
 {
     switch (static_cast<ControlFlag>(id)) {
         case ControlFlag::PersistingData:
+        case ControlFlag::FastRecording:
             return static_cast<ControlFlag>(id);
     }
     return std::nullopt;

@@ -11,6 +11,7 @@
  * ------------------------------------------------------------------------- */
 
 enum class TelemetryType : uint8_t {
-    SystemState = 0x01,  /**< SystemState downlink (Ethernet to GS) / CAN telemetry from the ECU. */
+    SystemState         = 0x01,  /**< High-rate SystemState downlink (Ethernet to GS) / CAN telemetry from the ECU. */
+    ExtendedSystemState = 0x02,  /**< Low-rate (~10 Hz) ExtendedSystemState: slow/bulky state (thermocouples, event timestamps). */
 };
 static_assert(sizeof(TelemetryType) == 1, "TelemetryType must be exactly 1 byte (on the wire)");
