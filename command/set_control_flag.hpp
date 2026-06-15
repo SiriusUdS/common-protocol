@@ -3,14 +3,24 @@
 #include <cstdint>
 #include <optional>
 
-/* Payload for CommandType::SetControlFlag — set a named runtime control flag. */
+/* Payload for CommandType::SetControlFlag — set a named runtime control flag.
+ *
+ * Control flags live in a 16-bit id space, split into two bytes: the LOW byte (ids 0..7)
+ * is the BASE set, common to every board (e.g. the SD-card recording flags); the HIGH byte
+ * (ids 8..15) is the PER-BOARD set, board-specific (e.g. the FCU solenoid valve). The two
+ * are separate enums + separate runtime bitmasks (see control_flags.hpp), but they share
+ * one on-wire id space so the ground station addresses any flag by a single 16-bit id — it
+ * never needs to know whether a flag is base or per-board. A board maps id < 8 to its base
+ * bitmask (bit = id) and id >= 8 to its per-board bitmask (bit = id - 8). */
+
+/** @brief Global id of the first per-board flag: ids 0..7 are base, 8..15 are per-board. */
+inline constexpr uint16_t CONTROL_FLAG_BOARD_OFFSET = 8;
 
 /**
- * @brief Which runtime control flag to set. The enumerator value IS the on-wire id
- *        (SetControlFlagFrame::flag) — one SSOT for every transport. Add flags here
- *        (e.g. arming/recording toggles the GS drives at runtime).
+ * @brief Base control flags — common to every board. The enumerator value is the bit
+ *        position in the base byte AND the low-byte on-wire id (ids 0..7).
  */
-enum class ControlFlag : uint8_t {
+enum class ControlFlagBase : uint8_t {
     PersistingData = 0x00,  /**< Persist telemetry records to the SD card. When off, records still
                                  drain from the buffer but are discarded (keeps the card from filling). */
     FastRecording  = 0x01,  /**< While persisting: log the high-rate SystemState at the fast rate
@@ -18,25 +28,51 @@ enum class ControlFlag : uint8_t {
                                  (100 Hz -> data_slow.bin) when clear. ExtendedSystemState (data_ext.bin)
                                  is logged regardless. No effect while PersistingData is off. */
 };
-static_assert(sizeof(ControlFlag) == 1, "ControlFlag must be exactly 1 byte (on the wire)");
-
-/** @brief SetControlFlag payload (2 bytes): which flag, and its new on/off value. */
-struct SetControlFlagFrame {
-    ControlFlag flag;   /**< Which control flag. */
-    uint8_t     value;  /**< 0 = off / disarm, non-zero = on / arm. */
-};
-static_assert(sizeof(SetControlFlagFrame) == 2, "SetControlFlagFrame must be 2 packed bytes");
+static_assert(sizeof(ControlFlagBase) == 1, "ControlFlagBase must be exactly 1 byte (a bit position 0..7)");
 
 /**
- * @brief Validate a raw on-wire id and recover the control flag it denotes.
- * @return The ControlFlag, or std::nullopt if @p id is not a known flag.
+ * @brief Per-board control flags for the FCU. The enumerator value is the bit position in
+ *        the per-board byte (0..7); its on-wire id is CONTROL_FLAG_BOARD_OFFSET + the value.
  */
-[[nodiscard]] constexpr std::optional<ControlFlag> toControlFlag(uint8_t id)
+enum class FcuControlFlag : uint8_t {
+    SolenoidValve = 0x00,  /**< Command the FCU solenoid valve open (set) or closed (clear). Actuation
+                                is gated to Unsafe: it only opens while set AND the board is in Unsafe,
+                                and auto-closes (and the flag is cleared) on leaving Unsafe. */
+};
+static_assert(sizeof(FcuControlFlag) == 1, "FcuControlFlag must be exactly 1 byte (a bit position 0..7)");
+
+/** @brief SetControlFlag payload: the 16-bit global flag id and its new on/off value. */
+struct SetControlFlagFrame {
+    uint16_t flag;      /**< 16-bit global flag id: 0..7 base, 8..15 per-board (board bit = flag - 8). */
+    uint8_t  value;     /**< 0 = off / clear, non-zero = on / set. */
+    uint8_t  reserved;  /**< Pad to 4 bytes; keep the frame packed. */
+};
+static_assert(sizeof(SetControlFlagFrame) == 4, "SetControlFlagFrame must be 4 packed bytes");
+
+/**
+ * @brief Validate a base-byte on-wire id (0..7) and recover the base flag it denotes.
+ * @return The ControlFlagBase, or std::nullopt if @p id is not a known base flag.
+ */
+[[nodiscard]] constexpr std::optional<ControlFlagBase> toControlFlagBase(uint16_t id)
 {
-    switch (static_cast<ControlFlag>(id)) {
-        case ControlFlag::PersistingData:
-        case ControlFlag::FastRecording:
-            return static_cast<ControlFlag>(id);
+    switch (static_cast<ControlFlagBase>(id)) {
+        case ControlFlagBase::PersistingData:
+        case ControlFlagBase::FastRecording:
+            return static_cast<ControlFlagBase>(id);
+    }
+    return std::nullopt;
+}
+
+/**
+ * @brief Validate a per-board-byte bit (0..7, i.e. on-wire id minus CONTROL_FLAG_BOARD_OFFSET)
+ *        and recover the FCU per-board flag it denotes.
+ * @return The FcuControlFlag, or std::nullopt if @p board_bit is not a known FCU flag.
+ */
+[[nodiscard]] constexpr std::optional<FcuControlFlag> toFcuControlFlag(uint16_t board_bit)
+{
+    switch (static_cast<FcuControlFlag>(board_bit)) {
+        case FcuControlFlag::SolenoidValve:
+            return static_cast<FcuControlFlag>(board_bit);
     }
     return std::nullopt;
 }
