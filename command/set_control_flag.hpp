@@ -38,6 +38,8 @@ enum class FcuControlFlag : uint8_t {
     SolenoidValve = 0x00,  /**< Command the FCU solenoid valve open (set) or closed (clear). Actuation
                                 is gated to Unsafe: it only opens while set AND the board is in Unsafe,
                                 and auto-closes (and the flag is cleared) on leaving Unsafe. */
+    Heater        = 0x01,  /**< Command the FCU heater on (set) or off (clear). Unlike the solenoid it is
+                                not state-gated: the heater follows this flag in any state (Control::serviceHeater). */
 };
 static_assert(sizeof(FcuControlFlag) == 1, "FcuControlFlag must be exactly 1 byte (a bit position 0..7)");
 
@@ -72,6 +74,7 @@ static_assert(sizeof(SetControlFlagFrame) == 4, "SetControlFlagFrame must be 4 p
 {
     switch (static_cast<FcuControlFlag>(board_bit)) {
         case FcuControlFlag::SolenoidValve:
+        case FcuControlFlag::Heater:
             return static_cast<FcuControlFlag>(board_bit);
     }
     return std::nullopt;

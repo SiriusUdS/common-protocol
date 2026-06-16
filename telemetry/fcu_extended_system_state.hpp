@@ -7,6 +7,7 @@
 #include "peripherals/power_monitor/power_monitor_info.hpp"  // PowerMonitorInfo
 #include "devices/ematch/ematch_info.hpp"                    // EmatchInfo (presence + firing timeline)
 #include "devices/solenoid/solenoid_info.hpp"                // SolenoidInfo (presence + actuation timeline)
+#include "devices/heater/heater_info.hpp"                    // HeaterInfo (on/off + actuation timeline)
 
 /* Low-frequency FCU telemetry record — the slow-changing, bulky state downlinked
  * over Ethernet (and logged to data_slow.bin) at ~10 Hz, separate from the 2 kHz
@@ -15,12 +16,13 @@
  *
  * The shared prefix (timestamp, control flags, refused-command diagnostics) is the
  * common ExtendedSystemStateBase; the FCU adds its board-specific peripherals (e-match,
- * solenoid, the 4 thermocouples, the INA3221) alongside it. */
+ * solenoid, heater, the 4 thermocouples, the INA3221) alongside it. */
 
 struct FcuExtendedSystemState {
     ExtendedSystemStateBase base;                              /**< Shared prefix: timestamp + base/per-board control flags + refused-command diagnostics. */
     EmatchInfo         ematch_info;                            /**< E-match presence + firing-line state + last energise/deenergise ticks. */
     SolenoidInfo       solenoid_info;                          /**< Solenoid-valve presence + open/closed state + last open/close ticks. */
+    HeaterInfo         heater_info;                            /**< Heater on/off state + last on/off ticks. */
     ThermocoupleInfo   thermocouple_info[THERMOCOUPLE_COUNT];  /**< 4 x MAX31856 (SPI6): per-channel temps + faults. */
     PowerMonitorInfo   power_monitor;                          /**< INA3221 (I2C4): per-channel shunt/bus codes + faults. */
 };
@@ -29,6 +31,7 @@ struct FcuExtendedSystemState {
 static_assert(sizeof(FcuExtendedSystemState) == sizeof(ExtendedSystemStateBase)
                                               + sizeof(EmatchInfo)
                                               + sizeof(SolenoidInfo)
+                                              + sizeof(HeaterInfo)
                                               + THERMOCOUPLE_COUNT * sizeof(ThermocoupleInfo)
                                               + sizeof(PowerMonitorInfo),
               "FcuExtendedSystemState has implicit padding — add explicit reserved bytes");
