@@ -12,14 +12,11 @@
  *
  * The shared prefix (timestamp, base/per-board control flags, refused-command diagnostics)
  * is the common ExtendedSystemStateBase — identical to the FCU's. The ECU has no per-board
- * flags, so base.control_flags_board stays 0.
- *
- * NOTE: on the current ECU PCB the I2C lines are swapped, so the driver runs stubbed and
- * power_monitor reads Unknown / data_valid 0 until the board is fixed (see ina3221 Config). */
+ * flags, so base.control_flags_board stays 0. */
 
 struct EcuExtendedSystemState {
     ExtendedSystemStateBase base;           /**< Shared prefix: timestamp + base/per-board control flags + refused-command diagnostics. */
-    PowerMonitorInfo        power_monitor;  /**< INA3221 (I2C4): per-channel shunt/bus codes + faults. Stubbed on the current PCB. */
+    PowerMonitorInfo        power_monitor;  /**< INA3221 (I2C4): per-channel shunt/bus codes + faults. */
 };
 
 // Wire layout guard: must be packed with no implicit padding.
