@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "telemetry/refused_command_info.hpp"   // RefusedCommandInfo (last refused SetState + SetControlFlag)
+#include "peripherals/storage/sd_write_engine_info.hpp"  // SdWriteEngineInfo (shared SD write-engine health)
 
 /* The fields common to every board's low-rate ExtendedSystemState. Both FcuExtendedSystemState
  * and EcuExtendedSystemState embed this as their leading `base` member, so the shared prefix
@@ -22,11 +23,13 @@ struct ExtendedSystemStateBase {
     uint8_t            backup_status;          /**< Backup-domain retention health probed at boot (logic::control::BackupStatus). */
     uint8_t            reserved[1];            /**< Aligns refused_command_info; keeps the record packed. */
     RefusedCommandInfo refused_command_info;   /**< Last refused SetState + SetControlFlag (with the state each was refused in) + counts. */
+    SdWriteEngineInfo  sd_write_engine_info;   /**< Board-wide async SD write-engine health: dropped-block count + sticky DMA-error flag. */
 };
 
 // Wire layout guard: the common prefix must be packed with no implicit padding so the ground
 // station decodes it byte-for-byte.
 static_assert(sizeof(ExtendedSystemStateBase) == sizeof(uint32_t)        // creation_timestamp_ms
                                                + 4                       // 2 flag bytes + backup_status + reserved[1]
-                                               + sizeof(RefusedCommandInfo),
+                                               + sizeof(RefusedCommandInfo)
+                                               + sizeof(SdWriteEngineInfo),
               "ExtendedSystemStateBase has implicit padding — add explicit reserved bytes");

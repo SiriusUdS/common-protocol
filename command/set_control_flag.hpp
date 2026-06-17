@@ -25,6 +25,12 @@ enum class ControlFlagBase : uint8_t {
                                 when set, or downsampled to the slow rate (100 Hz -> data_slow.bin) when
                                 clear. ExtendedSystemState (data_ext.bin) is logged regardless. Telemetry
                                 is always persisted to the SD card; this only picks the SystemState rate. */
+    DisableLogging = 0x01, /**< Stop SD logging and finalize the run (end-of-campaign). Default clear
+                                (logging active). When set, the recorder flushes its partial blocks, then
+                                truncates each pre-allocated log file back to the bytes actually written,
+                                returning the unused tail to the volume. This is a ONE-WAY action for the
+                                session: once finalized the tail is reclaimed, so logging does NOT resume
+                                if the flag is later cleared — a reboot is required to log again. */
 };
 static_assert(sizeof(ControlFlagBase) == 1, "ControlFlagBase must be exactly 1 byte (a bit position 0..7)");
 
@@ -57,6 +63,7 @@ static_assert(sizeof(SetControlFlagFrame) == 4, "SetControlFlagFrame must be 4 p
 {
     switch (static_cast<ControlFlagBase>(id)) {
         case ControlFlagBase::FastRecording:
+        case ControlFlagBase::DisableLogging:
             return static_cast<ControlFlagBase>(id);
     }
     return std::nullopt;
