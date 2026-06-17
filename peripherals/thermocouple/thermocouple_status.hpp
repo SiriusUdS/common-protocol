@@ -12,6 +12,10 @@ struct ThermocoupleStatus {
     uint8_t tc_out_range : 1;  /**< SR.TCRANGE: thermocouple temperature outside the type's range. */
     uint8_t cj_out_range : 1;  /**< SR.CJRANGE: cold-junction temperature outside range. */
     uint8_t data_valid   : 1;  /**< true if this record carries a fresh, fault-free read (not a fallback). */
-    uint8_t reserved     : 3;  /**< Padding; room for the remaining SR threshold bits. */
+    uint8_t comms_ok     : 1;  /**< true if the one-time CR0/CR1 config readback matched at init, i.e.
+                                    the SPI link to this MAX31856 is confirmed alive. 0 = the device did
+                                    not respond (all-zero / mismatched readback); any temperatures it
+                                    reports are meaningless, so the channel is forced Faulted. */
+    uint8_t reserved     : 2;  /**< Padding; room for the remaining SR threshold bits. */
 };
 static_assert(sizeof(ThermocoupleStatus) == 1, "ThermocoupleStatus must be exactly 1 byte (on the wire)");

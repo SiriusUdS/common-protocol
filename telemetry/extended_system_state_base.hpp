@@ -21,7 +21,7 @@ struct ExtendedSystemStateBase {
     uint8_t            control_flags_base;     /**< BASE control flags (bit N = ControlFlagBase value N): common to every board. */
     uint8_t            control_flags_board;    /**< PER-BOARD control flags (bit N = this board's flag value N); 0 if the board has none. */
     uint8_t            backup_status;          /**< Backup-domain retention health probed at boot (logic::control::BackupStatus). */
-    uint8_t            reserved[1];            /**< Aligns refused_command_info; keeps the record packed. */
+    uint8_t            seconds_since_last_ping; /**< Whole seconds since the last Ping (the GS heartbeat) this board received, saturating at 255; counts from boot until the first Ping. */
     RefusedCommandInfo refused_command_info;   /**< Last refused SetState + SetControlFlag (with the state each was refused in) + counts. */
     SdWriteEngineInfo  sd_write_engine_info;   /**< Board-wide async SD write-engine health: dropped-block count + sticky DMA-error flag. */
 };
@@ -29,7 +29,7 @@ struct ExtendedSystemStateBase {
 // Wire layout guard: the common prefix must be packed with no implicit padding so the ground
 // station decodes it byte-for-byte.
 static_assert(sizeof(ExtendedSystemStateBase) == sizeof(uint32_t)        // creation_timestamp_ms
-                                               + 4                       // 2 flag bytes + backup_status + reserved[1]
+                                               + 4                       // 2 flag bytes + backup_status + seconds_since_last_ping
                                                + sizeof(RefusedCommandInfo)
                                                + sizeof(SdWriteEngineInfo),
               "ExtendedSystemStateBase has implicit padding — add explicit reserved bytes");

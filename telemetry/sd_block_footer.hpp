@@ -20,8 +20,8 @@
  *   [ payload : payload_bytes ][ MAGIC x k ][ saved_ms ][ payload_bytes ][ crc32 ]
  *                              \_________ footer (>= SD_BLOCK_MIN_FOOTER_BYTES) _________/
  *   - the MAGIC fill spans [payload_bytes, total - 12), so the block is fully used (no dead
- *     padding); for the fixed 4096-byte fast block it absorbs the slack between the last whole
- *     record and the trailer. For the variable slow/ext writes it is a single MAGIC word.
+ *     padding); for the fixed SD_LOG_BLOCK_BYTES fast block it absorbs the slack between the last
+ *     whole record and the trailer. For the variable slow/ext writes it is a single MAGIC word.
  *   - crc32 (zlib / reflected-0xEDB88320, the same variant as the telemetry-frame CRC) covers
  *     [0, total - 4): payload + MAGIC fill + saved_ms + payload_bytes.
  *
@@ -70,7 +70,7 @@ inline constexpr std::size_t SD_BLOCK_MIN_FOOTER_BYTES = sizeof(uint32_t) + SD_B
 
 /** @brief Most payload bytes a fast-log block can hold while leaving room for the footer. Both
  *         the telemetry buffer ring and the recorder's slow/ext accumulators flip to a new block
- *         once another record would exceed this, so the footer always fits inside the 4096. */
+ *         once another record would exceed this, so the footer always fits inside SD_LOG_BLOCK_BYTES. */
 inline constexpr std::size_t SD_BLOCK_PAYLOAD_CAP = SD_LOG_BLOCK_BYTES - SD_BLOCK_MIN_FOOTER_BYTES;
 
 namespace detail {
