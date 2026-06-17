@@ -21,12 +21,10 @@ inline constexpr uint16_t CONTROL_FLAG_BOARD_OFFSET = 8;
  *        position in the base byte AND the low-byte on-wire id (ids 0..7).
  */
 enum class ControlFlagBase : uint8_t {
-    PersistingData = 0x00,  /**< Persist telemetry records to the SD card. When off, records still
-                                 drain from the buffer but are discarded (keeps the card from filling). */
-    FastRecording  = 0x01,  /**< While persisting: log the high-rate SystemState at the fast rate
-                                 (2 kHz -> data_fast.bin) when set, or downsampled to the slow rate
-                                 (100 Hz -> data_slow.bin) when clear. ExtendedSystemState (data_ext.bin)
-                                 is logged regardless. No effect while PersistingData is off. */
+    FastRecording = 0x00,  /**< Log the high-rate SystemState at the fast rate (2 kHz -> data_fast.bin)
+                                when set, or downsampled to the slow rate (100 Hz -> data_slow.bin) when
+                                clear. ExtendedSystemState (data_ext.bin) is logged regardless. Telemetry
+                                is always persisted to the SD card; this only picks the SystemState rate. */
 };
 static_assert(sizeof(ControlFlagBase) == 1, "ControlFlagBase must be exactly 1 byte (a bit position 0..7)");
 
@@ -58,7 +56,6 @@ static_assert(sizeof(SetControlFlagFrame) == 4, "SetControlFlagFrame must be 4 p
 [[nodiscard]] constexpr std::optional<ControlFlagBase> toControlFlagBase(uint16_t id)
 {
     switch (static_cast<ControlFlagBase>(id)) {
-        case ControlFlagBase::PersistingData:
         case ControlFlagBase::FastRecording:
             return static_cast<ControlFlagBase>(id);
     }

@@ -19,13 +19,14 @@ struct ExtendedSystemStateBase {
     uint32_t           creation_timestamp_ms;  /**< Time this record was assembled. */
     uint8_t            control_flags_base;     /**< BASE control flags (bit N = ControlFlagBase value N): common to every board. */
     uint8_t            control_flags_board;    /**< PER-BOARD control flags (bit N = this board's flag value N); 0 if the board has none. */
-    uint8_t            reserved[2];            /**< Aligns refused_command_info; keeps the record packed. */
+    uint8_t            backup_status;          /**< Backup-domain retention health probed at boot (logic::control::BackupStatus). */
+    uint8_t            reserved[1];            /**< Aligns refused_command_info; keeps the record packed. */
     RefusedCommandInfo refused_command_info;   /**< Last refused SetState + SetControlFlag (with the state each was refused in) + counts. */
 };
 
 // Wire layout guard: the common prefix must be packed with no implicit padding so the ground
 // station decodes it byte-for-byte.
 static_assert(sizeof(ExtendedSystemStateBase) == sizeof(uint32_t)        // creation_timestamp_ms
-                                               + 4                       // 2 flag bytes + reserved[2]
+                                               + 4                       // 2 flag bytes + backup_status + reserved[1]
                                                + sizeof(RefusedCommandInfo),
               "ExtendedSystemStateBase has implicit padding — add explicit reserved bytes");

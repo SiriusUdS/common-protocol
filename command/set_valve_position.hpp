@@ -14,10 +14,14 @@ enum class ValveCommand : uint8_t {
 };
 static_assert(sizeof(ValveCommand) == 1, "ValveCommand must be exactly 1 byte (on the wire)");
 
-/** @brief SetValvePosition payload (3 bytes, like the telemetry valve record). */
+/** @brief SetValvePosition payload (4 packed bytes). */
 struct SetValvePositionFrame {
     FcuValves    valve;   /**< Which valve to drive. */
     ValveCommand action;  /**< Open / Close / SetOpenedPct. */
     uint8_t      value;   /**< Opened %, 0..100. Used only by SetOpenedPct; optional (ignored) for Open/Close. */
+    uint8_t      force;   /**< 0 = normal switch-monitored move; non-zero = FORCED actuation — the
+                              limit switches are bypassed for FORCED_VALVE_ACTUATION_MS, then the
+                              valve auto-reverts to normal. Applies to Open/Close; ignored by
+                              SetOpenedPct (a proportional hold has no switch to bypass). */
 };
-static_assert(sizeof(SetValvePositionFrame) == 3, "SetValvePositionFrame must be 3 packed bytes");
+static_assert(sizeof(SetValvePositionFrame) == 4, "SetValvePositionFrame must be 4 packed bytes");
