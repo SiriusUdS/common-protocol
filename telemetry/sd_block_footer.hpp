@@ -39,9 +39,16 @@
 
 namespace logic::telemetry {
 
-/** @brief Sector-aligned size of one fast-log block (data_fast.bin), footer included. Shared so
- *         both boards' buffer rings, this recorder, and any reader agree. */
-inline constexpr std::size_t SD_LOG_BLOCK_BYTES = 4096;
+/** @brief Sector-aligned size of one log block (data_fast/slow/ext.bin), footer included. Shared so
+ *         both boards' buffer rings, this recorder, and any reader agree — the on-disk + in-RAM
+ *         SSOT. Must be a multiple of the 512-byte SD sector (it is written by raw-sector DMA) and
+ *         <= 65535 (the ring's per-slot `used` byte-count is a uint16). Bigger blocks = fewer,
+ *         larger DMA writes = higher SD throughput, at the cost of more buffer RAM (every telemetry
+ *         ring slot + engine queue slot + recorder accumulator is one block) and a longer fill-to-
+ *         flush latency per slot. 16384 = 32 sectors. */
+inline constexpr std::size_t SD_LOG_BLOCK_BYTES = 16384;
+static_assert(SD_LOG_BLOCK_BYTES % 512 == 0, "SD_LOG_BLOCK_BYTES must be a whole number of 512-byte sectors");
+static_assert(SD_LOG_BLOCK_BYTES <= 65535, "SD_LOG_BLOCK_BYTES must fit the ring's uint16 per-slot used counter");
 
 /** @brief Footer marker word, repeated to fill a block out to its trailer; little-endian on disk. */
 inline constexpr uint32_t SD_BLOCK_MAGIC = 0x5D10F007u;
