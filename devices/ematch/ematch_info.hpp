@@ -9,11 +9,12 @@
  * the other *Info records (state/status + data), minus a state enum — the e-match has no
  * device state machine of its own. */
 
-/** @brief E-match status (8-bit): presence + firing-line state. */
+/** @brief E-match status (8-bit): presence + continuity + firing-line state. */
 struct EmatchStatus {
-    uint8_t detected  : 1;  /**< An e-match is plugged in (EMATCH_DET active / continuity LED lit). */
-    uint8_t energised : 1;  /**< Firing line driven high (held only during the Ignite state). */
-    uint8_t reserved  : 6;  /**< Padding; room for more e-match flags later. */
+    uint8_t detected   : 1;  /**< An e-match is plugged in (EMATCH_DET active). */
+    uint8_t energised  : 1;  /**< Firing line driven high (held only during the Ignite state). */
+    uint8_t continuity : 1;  /**< Continuity-line state (EMATCH_CONT) — lit whenever detected; surfaces the indicator state to the GS. */
+    uint8_t reserved   : 5;  /**< Padding; room for more e-match flags later. */
 };
 static_assert(sizeof(EmatchStatus) == 1, "EmatchStatus must be exactly 1 byte (on the wire)");
 

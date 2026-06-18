@@ -8,11 +8,12 @@
  * it is driven open, and the exact actuation timeline straight from telemetry. Same shape as
  * the other *Info records (status + data), minus a state enum — the solenoid is binary. */
 
-/** @brief Solenoid status (8-bit): presence + open/closed state. */
+/** @brief Solenoid status (8-bit): presence + continuity + open/closed state. */
 struct SolenoidStatus {
-    uint8_t detected : 1;  /**< The solenoid is present (SOL_VALVE_DET active / continuity LED lit). */
-    uint8_t open     : 1;  /**< Driven open (coil energised); only ever set while in the Unsafe state. */
-    uint8_t reserved : 6;  /**< Padding; room for more solenoid flags later. */
+    uint8_t detected   : 1;  /**< The solenoid is present (SOL_VALVE_DET active). */
+    uint8_t open       : 1;  /**< Driven open (coil energised); only ever set while in the Unsafe state. */
+    uint8_t continuity : 1;  /**< Continuity-line state (SOL_VALVE_CONT) — lit whenever detected; surfaces the indicator state to the GS. */
+    uint8_t reserved   : 5;  /**< Padding; room for more solenoid flags later. */
 };
 static_assert(sizeof(SolenoidStatus) == 1, "SolenoidStatus must be exactly 1 byte (on the wire)");
 
